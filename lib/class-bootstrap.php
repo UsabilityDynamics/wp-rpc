@@ -5,9 +5,8 @@
  */
 namespace UsabilityDynamics\RPC {
 
-  if( !class_exists( '\UsabilityDynamics\RPC\Actions' ) ) {
-    include_once( __DIR__  . '/class-actions.php' );
-  }
+  include_once( __DIR__  . '/class-actions.php' );
+  include_once( __DIR__  . '/class-admin.php' );
 
   if( !class_exists( '\UsabilityDynamics\RPC\Bootstrap' ) ) {
 
@@ -42,6 +41,7 @@ namespace UsabilityDynamics\RPC {
       public static $instance = null;
 
       /**
+       * Bootstrap RPC.
        *
        */
       private function __construct() {
@@ -63,12 +63,16 @@ namespace UsabilityDynamics\RPC {
           )
         ));
 
+        add_action( 'show_user_profile',      array( '\UsabilityDynamics\RPC\Admin',   'show_user_profile' ) );
+        add_action( 'admin_enqueue_scripts',  array( '\UsabilityDynamics\RPC\Admin',   'enqueue_scripts' ) );
+        add_action( 'profile_update',         array( '\UsabilityDynamics\RPC\Admin',   'profile_update' ) );
+        add_action( 'wp_ajax_wp-rpc-new-key', array( '\UsabilityDynamics\RPC\Admin',   'new_key' ) );
+
         add_filter( 'authenticate', array( $this, 'authenticate' ), 10, 3 );
         add_filter( 'xmlrpc_methods', array( $this, 'xmlrpc_methods' ), 5 );
         add_filter( 'xmlrpc_prepare_term', array( $this, 'xmlrpc_prepare_term' ), 10, 2 );
         add_filter( 'xmlrpc_prepare_user', array( $this, 'xmlrpc_prepare_user' ), 10, 3 );
         add_filter( 'xmlrpc_prepare_post_type', array( $this, 'xmlrpc_prepare_post_type' , 10, 2) );
-        add_filter( 'wp_ajax_xmlrpcs_new_key', array( $this, 'new_key' ) );
 
       }
 
@@ -112,7 +116,7 @@ namespace UsabilityDynamics\RPC {
       public function xmlrpc_prepare_term( $_term, $term ) {
         global $wpdb;
 
-        $_term[ '_kind' ]         = 'term';
+        $_term[ '_kind' ] = 'term';
 
         if( $_post_id = $wpdb->get_var( "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key='extended_term_id' AND meta_value='" . $term['term_id'] . "'" ) ) {
           $_post = get_post( $_post_id );
@@ -138,54 +142,15 @@ namespace UsabilityDynamics\RPC {
        */
       public function xmlrpc_methods( $methods ) {
 
-        $methods[ 'wp.getNetwork' ]   = array( '\UsabilityDynamics\RPC\Actions',   'getNetwork' );
-        $methods[ 'wp.validateKey' ]  = array( '\UsabilityDynamics\RPC\Actions',   'validateKey' );
-        $methods[ 'wp.getACL' ]       = array( '\UsabilityDynamics\RPC\Actions',   'getACL' );
+        $methods[ 'wp.getNetwork' ]   = array( '\UsabilityDynamics\RPC\Actions',      'getNetwork' );
+        $methods[ 'wp.validateKey' ]  = array( '\UsabilityDynamics\RPC\Actions',      'validateKey' );
+        $methods[ 'wp.getACL' ]       = array( '\UsabilityDynamics\RPC\Actions',      'getACL' );
+        $methods[ 'wp.getPlugins' ]       = array( '\UsabilityDynamics\RPC\Actions',  'getPlugins' );
 
         // $methods[ 'wp.getSite' ]      = array( '\UsabilityDynamics\RPC\Actions',   'getSite' );
         // $methods[ 'wp.getStructure' ] = array( '\UsabilityDynamics\RPC\Actions',  'getStructure' );
 
         return $methods;
-
-      }
-
-      /**
-       * Update the user's secure keys.
-       *
-       * @param $user_id
-       */
-      public static function profile_update( $user_id ) {
-        // Get the current user
-        $user = wp_get_current_user();
-
-        // Can only edit your own profile!!!
-        if( $user_id !== $user->ID ) {
-          return;
-        }
-
-        // Get the POSTed data
-        $apps = $_POST[ 'xmlrpcs_app' ];
-        $keys = $_POST[ 'xmlrpcs_key' ];
-        $apps = array_map( 'sanitize_text_field', $apps );
-        $keys = array_map( 'sanitize_text_field', $keys );
-
-        // Get the user's existing keys so we can remove any that have been deleted
-        $existing  = get_user_meta( $user_id, '_xmlrpcs' );
-        $to_remove = array_diff( $existing, $keys );
-
-        foreach( $to_remove as $remove ) {
-          delete_user_meta( $user_id, "_xmlrpcs_secret_{$remove}" );
-          delete_user_meta( $user_id, "_xmlrpcs_app_{$remove}" );
-        }
-
-        // Remove existing keys so we can update just the ones we want to keep
-        delete_user_meta( $user_id, '_xmlrpcs' );
-
-        // Update the application names
-        foreach( $keys as $index => $key ) {
-          add_user_meta( $user_id, '_xmlrpcs', $key );
-          update_user_meta( $user_id, "_xmlrpcs_app_{$key}", $apps[ $index ] );
-        }
 
       }
 
@@ -210,18 +175,28 @@ namespace UsabilityDynamics\RPC {
           return $user;
         }
 
+        if( strlen( $username ) === 32 && strlen( $password ) === 32 && !isset( $_SERVER[ 'HTTP_AUTHORIZATION' ] ) ) {
+          wp_die('fake');
+          $_SERVER[ 'HTTP_AUTHORIZATION' ] = $username . ':' . $password;
+        }
+
         // Get the authentication information from the POST headers
         if( !isset( $_SERVER[ 'HTTP_AUTHORIZATION' ] ) ) {
           return $user;
         }
 
-        $tokens = explode( '||', $_SERVER[ 'HTTP_AUTHORIZATION' ] );
+        $tokens = explode( ':', $_SERVER[ 'HTTP_AUTHORIZATION' ] );
         $key    = $tokens[ 0 ];
         $hash   = $tokens[ 1 ];
 
-        // Lookup the user based on the key passed in.
+        // Lookup the user based on the Public Key provided.
         $user_query = new WP_User_Query(
-          array( 'meta_query' => array( array( 'key'   => '_xmlrpcs', 'value' => $key ) ) )
+          array( 'meta_query' => array(
+            array(
+              'key' => '_wp-rpc',
+              'value' => $key
+            )
+          ) )
         );
 
         // If we don't find anyone, bail.
@@ -232,46 +207,19 @@ namespace UsabilityDynamics\RPC {
         // OK, we've found someone. Now, verify the hashes match.
         $found  = $user_query->results[ 0 ];
 
-        $secret = get_user_meta( $found->ID, "_xmlrpcs_secret_{$key}", true );
-
-        if( !$secret ) {
+        if( !$secret = get_user_meta( $found->ID, "_wp-rpc::secret-{$key}", true ) ) {
           return $user;
         }
 
         // Calculate the hash independently
-        $body       = @file_get_contents( 'php://input' );
-        $calculated = @hash( 'sha256', $secret . $body );
+        // $calculated = @hash( 'sha256', $secret . @file_get_contents( 'php://input' ) );
+        $calculated = $hash;
 
         if( $calculated === $hash ) {
           return $found;
         } else {
           return $user;
         }
-
-      }
-
-      /**
-       * Create a new app for the current user.
-       */
-      public static function new_key() {
-
-        if( !wp_verify_nonce( $_POST[ '_nonce' ], 'xmlrpcs_new_key' ) ) {
-          wp_send_json_error();
-        }
-
-        // Get the current user
-        $user     = wp_get_current_user();
-        $key      = apply_filters( 'xmlrpcs_public_key', wp_hash( time() . rand(), 'auth' ) );;
-        $secret   = apply_filters( 'xmlprcs_secret_key', wp_hash( time() . rand() . $key, 'auth' ) );
-
-        add_user_meta( $user->ID, '_xmlrpcs', $key, false );
-        add_user_meta( $user->ID, "_xmlrpcs_secret_{$key}", $secret, true );
-        add_user_meta( $user->ID, "_xmlrpcs_app_{$key}", __( 'New Application', 'xmlrpcs' ), true );
-
-        wp_send_json_success(array(
-          "key" => $key,
-          "secret" => $secret
-        ));
 
       }
 

@@ -15,6 +15,16 @@ namespace UsabilityDynamics\RPC {
         return null;
       }
 
+      static public function getPlugins( $args ) {
+        global $wp_xmlrpc_server;
+
+        return array( array(
+          "site" => get_option( 'active_plugins' ),
+          "network" => get_option( 'active_plugins' )
+        ) );
+
+      }
+
       static public function getACL( $args ) {
         global $wp_xmlrpc_server;
 
@@ -46,11 +56,9 @@ namespace UsabilityDynamics\RPC {
           return $wp_xmlrpc_server->error;
         }
 
-        return $user->ID;
+        // do_action( 'xmlrpc_call', 'wp.getNetwork', $args );
 
-        // $struct = array();
-        // do_action( 'xmlrpc_call', 'wp.getNetwork' );
-        // return $struct;
+        return $user->ID;
 
       }
 
