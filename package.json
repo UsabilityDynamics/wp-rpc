@@ -1,0 +1,25 @@
+{
+  "name": "wp-rpc",
+  "version": "0.1.0",
+  "description": "wp-rpc plugin",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/UsabilityDynamics/wp-rpc"
+  },
+  "engines": {
+    "node": ">= 0.10.0"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.2",
+    "grunt-contrib-yuidoc": "~0.5.0",
+    "grunt-contrib-uglify": "~0.2.4",
+    "grunt-contrib-watch": "~0.5.3",
+    "grunt-markdown": "~0.4.0",
+    "grunt-requirejs": "~0.4.0",
+    "grunt-contrib-concat": "~0.3.0",
+    "grunt-contrib-clean": "~0.5.0",
+    "grunt-wp-i18n": "~0.4.0",
+    "grunt-contrib-less": "~0.10.0"
+  }
+}

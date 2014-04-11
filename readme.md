@@ -1,11 +1,10 @@
 WordPress XML RPC plugin.
 
-
 ## New Methods
 * wp.getSite - Return site (blog) meta.
 * wp.getNetwork - Return MultiSite meta.
 * wp.getStructure - Return post-type schema, references wp.getPostTypes
-* wp.getAccessKeys - Get access 
+* wp.validateKey - Get access
 * wp.getACL - Return roles and capabilities.
 
 ## Extended Methods
@@ -14,7 +13,6 @@ WordPress XML RPC plugin.
 * wp.getPostTypes - Includes additional information about post types.
 
 ## Filters
-* xmlrpc_methods
 * xmlrpc_blog_options
 * xmlrpc_prepare_term
 * xmlrpc_prepare_post
