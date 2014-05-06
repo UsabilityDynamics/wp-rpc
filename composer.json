@@ -27,7 +27,9 @@
     "php": ">=5.3",
     "usabilitydynamics/lib-ui": "master",
     "usabilitydynamics/lib-settings": "master",
-    "usabilitydynamics/lib-wp-rpc": "master"
+    "usabilitydynamics/lib-api": "master",
+    "usabilitydynamics/lib-rest": "master",
+    "usabilitydynamics/lib-rpc": "master"
   },
   "autoload": {
     "classmap": [ "lib" ]
