@@ -1,6 +1,7 @@
 {
   "name": "usabilitydynamics/wp-rpc",
   "version": "0.1.0",
+  "type": "wordpress-plugin",
   "homepage": "https://github.com/UsabilityDynamics/wp-rpc",
   "keywords": [
     "rpc",
