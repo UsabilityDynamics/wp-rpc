@@ -1,3 +1,9 @@
+[![Issues - Bug](https://badge.waffle.io/usabilitydynamics/wp-rpc.png?label=bug&title=Bugs)](http://waffle.io/usabilitydynamics/wp-rpc)
+[![Issues - Backlog](https://badge.waffle.io/usabilitydynamics/wp-rpc.png?label=backlog&title=Backlog)](http://waffle.io/usabilitydynamics/wp-rpc/)
+[![Scrutinizer Quality](http://img.shields.io/scrutinizer/g/UsabilityDynamics/wp-rpc.svg)](https://scrutinizer-ci.com/g/UsabilityDynamics/wp-rpc)
+[![Scrutinizer Coverage](http://img.shields.io/scrutinizer/coverage/g/UsabilityDynamics/wp-rpc.svg)](https://scrutinizer-ci.com/g/UsabilityDynamics/wp-rpc)
+[![Dependencies](https://gemnasium.com/UsabilityDynamics/wp-rpc.svg)](https://gemnasium.com/UsabilityDynamics/wp-rpc)
+
 WordPress XML RPC plugin.
 
 ## New Methods
